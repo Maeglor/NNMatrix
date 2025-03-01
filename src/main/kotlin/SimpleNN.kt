@@ -1,24 +1,19 @@
 import org.jetbrains.kotlinx.multik.api.linalg.dot
 import org.jetbrains.kotlinx.multik.api.mk
-import org.jetbrains.kotlinx.multik.api.ndarray
 import org.jetbrains.kotlinx.multik.api.rand
 import org.jetbrains.kotlinx.multik.ndarray.data.D2
 import org.jetbrains.kotlinx.multik.ndarray.data.NDArray
-import org.jetbrains.kotlinx.multik.ndarray.data.set
 import org.jetbrains.kotlinx.multik.ndarray.operations.append
 import org.jetbrains.kotlinx.multik.ndarray.operations.map
 import org.jetbrains.kotlinx.multik.ndarray.operations.minusAssign
 import org.jetbrains.kotlinx.multik.ndarray.operations.times
-import utils.DoNothingMutableCollection
-import utils.toColumn
-import utils.toRow
+import utils.*
 import java.util.*
 import kotlin.math.exp
 
 
 class SimpleNN(layers: IntArray, val bias: Boolean = true) {
-    val biasConst =
-        mk.ndarray(mk[mk[1.0]]) // единичная матрица для добавления сигнала смещения с фиксированным значением
+
 
     // Функция активации (сигма)
     fun activationFunction(x: Double): Double {
@@ -55,13 +50,29 @@ class SimpleNN(layers: IntArray, val bias: Boolean = true) {
         }
     }
 
-    fun predict(input: DoubleArray): DoubleArray = predict(input, DoNothingMutableCollection())
 
-    fun predict(input: DoubleArray, answers: MutableCollection<NDArray<Double, D2>>): DoubleArray =
+    fun predict(
+        input: DoubleArray,
+        answers: MutableCollection<NDArray<Double, D2>> = DoNothingMutableCollection()
+    ): DoubleArray =
         predict(input.toRow(), answers).data.getDoubleArray()
 
 
-    fun predict(input: NDArray<Double, D2>, answers: MutableCollection<NDArray<Double, D2>>): NDArray<Double, D2> {
+    /**
+     * Метод прямого вычисления ответа нейросетью.
+     *
+     *   @param input матрица из заданий. Допускается либо одно задание в виде единичной строки с длинной равной входному слою,
+     *  либо несколько заданий, где каждое новое задание является новой строкой матрицы.
+     *
+     *  @param answers Для нужд обучения по методу обратного распространений ошибки есть возможность сохранить все промежуточные матрицы
+     *  отетов для каждого слоя. Представляет собой список матриц, содержащий ответы для каждого слоя начиная с первого.
+     *  Необязательный параметр.
+     *  @return Матрица ответов, где каждая строчка это ответ соответствующий заданию в поле input
+     */
+    fun predict(
+        input: NDArray<Double, D2>,
+        answers: MutableCollection<NDArray<Double, D2>> = DoNothingMutableCollection()
+    ): NDArray<Double, D2> {
 
         answers.clear()
         var processed = input
@@ -85,31 +96,13 @@ class SimpleNN(layers: IntArray, val bias: Boolean = true) {
         return processed
     }
 
-    //Устанавливает значение для всего столбца матрицы. По умолчанию последний столбец матрицы
-    fun NDArray<Double, D2>.setColumn(value: Double, column: Int = shape[0] - 1): NDArray<Double, D2> {
-        val index = shape.copyOf()
-        index[0] = column
-
-        for (i in 0 until shape.last()) {
-            index[1] = i
-            this[index] = value
-        }
-        return this
-    }
-
-    //Устанавливает значение для всей строки матрицы. По умолчанию последняя строка матрицы
-    fun NDArray<Double, D2>.setRow(value: Double, row: Int = shape[1] - 1): NDArray<Double, D2> {
-        val index = shape.copyOf()
-        index[1] = row
-
-        for (i in 0 until shape.first()) {
-            index[0] = i
-            this[index] = value
-        }
-
-        return this
-    }
-
+    /**
+     * Обучает нейросеть по методу обратного распространений ошибки.
+     *
+     * @param sigmaSignals матрицы весов промежуточных слоев. Самый простой способ получить их -- взять из поля answers функции predict
+     * @param errors матрица ошибок. В целом это матрица ответов нейросети - матрица правильных ответов.
+     * @param learnConf Коэфицент обучения нейросети. Подбирается эмпирически.
+     */
     fun backPropagateErrors(sigmaSignals: List<NDArray<Double, D2>>, errors: NDArray<Double, D2>, learnConf: Double) {
 
         val errorsList = LinkedList<NDArray<Double, D2>>()

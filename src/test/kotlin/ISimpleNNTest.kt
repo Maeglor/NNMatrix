@@ -143,10 +143,10 @@ class SimpleNNTest {
                 mk[1.0, 1.0, 0.0, 1.0],
                 mk[0.0, 0.0, 1.0, 1.0],
             ]
-        )
+        ).transpose()
 
         //ответы
-        val answ1 = mk.ndarray(
+        val answ = mk.ndarray(
             mk[
                 mk[1.0],
                 mk[0.0],
@@ -162,6 +162,12 @@ class SimpleNNTest {
                 mk[0.0],
             ]
         )
+
+        val nn = SimpleNN(intArrayOf(4, 3, 1))
+
+        val res = nn.predict(task)
+
+        println(res)
 
 
 
