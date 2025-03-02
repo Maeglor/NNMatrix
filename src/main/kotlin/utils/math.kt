@@ -10,7 +10,7 @@ fun DoubleArray.toRow(): NDArray<Double, D2> = mk.d2array<Double>(this.size, 1) 
 fun DoubleArray.toColumn() = mk.d2array<Double>(1, this.size) { this[it] }
 
 //Устанавливает значение для всего столбца матрицы. По умолчанию последний столбец матрицы
-fun NDArray<Double, D2>.setColumn(value: Double, column: Int = shape[0] - 1): NDArray<Double, D2> {
+fun NDArray<Double, D2>.setRow(value: Double, column: Int = shape[0] - 1): NDArray<Double, D2> {
     val index = shape.copyOf()
     index[0] = column
 
@@ -22,7 +22,7 @@ fun NDArray<Double, D2>.setColumn(value: Double, column: Int = shape[0] - 1): ND
 }
 
 //Устанавливает значение для всей строки матрицы. По умолчанию последняя строка матрицы
-fun NDArray<Double, D2>.setRow(value: Double, row: Int = shape[1] - 1): NDArray<Double, D2> {
+fun NDArray<Double, D2>.setColumn(value: Double, row: Int = shape[1] - 1): NDArray<Double, D2> {
     val index = shape.copyOf()
     index[1] = row
 
